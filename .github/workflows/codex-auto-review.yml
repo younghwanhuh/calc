@@ -29,4 +29,4 @@ jobs:
 
       - name: Run Codex Review
         run: |
-          codex --ask-for-approval never --quiet "Review code changes in this PR, identify bugs, and suggest improvements."
+          codex review --ask-for-approval never --quiet

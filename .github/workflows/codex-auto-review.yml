@@ -1,65 +1,47 @@
 name: Codex Auto Review
 
 on:
-  push:
-    branches: ["**"]
   pull_request:
     types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
 
 jobs:
   codex-review:
     runs-on: ubuntu-latest
+
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 🔹 PR 코멘트 등록용 토큰
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set up Node.js
+      - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "npm"
 
-      - name: Run Codex review
+      - name: Install Codex CLI
+        run: npm install -g @openai/codex
+
+      # 🔹 Codex 실행 결과를 파일로 저장
+      - name: Run Codex Review
         env:
           TERM: dumb
-          NO_COLOR: "1"
-          FORCE_COLOR: "0"
+          NO_COLOR: true
+          FORCE_COLOR: 0
         run: |
-          echo "Running Codex review..."
-          npx @openai/codex@latest review --ask-for-approval never --format markdown > codex_review.md 2>&1 || true
+          echo "🔍 Running Codex review..."
+          npx @openai/codex review --ask-for-approval never > codex_review.txt 2>&1 || true
 
-      - name: Append review to job summary
-        if: always()
-        run: cat codex_review.md >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload Codex review artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: codex-review
-          path: codex_review.md
-          if-no-files-found: error
-
-      - name: Comment review on pull request
+      # 🔹 Codex 출력 내용을 PR 코멘트로 등록
+      - name: Post Codex Review as PR comment
         if: ${{ github.event_name == 'pull_request' }}
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const body = fs.readFileSync('codex_review.md', 'utf8').trim();
-            if (!body) {
-              core.info('Codex review output is empty; skipping PR comment.');
-              return;
-            }
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body,
-            });
+        run: |
+          echo "💬 Posting Codex review result to PR..."
+          gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
+            -f body="$(cat codex_review.txt)"

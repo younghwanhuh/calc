@@ -12,31 +12,38 @@ jobs:
 
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 🔹 Codex가 PR 코멘트 남길 때 사용
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 🔹 PR 코멘트 등록용 토큰
 
     steps:
-      # ✅ 코드 체크아웃
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # ✅ Node.js 설치
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # ✅ Codex CLI 설치
       - name: Install Codex CLI
         run: npm install -g @openai/codex
 
-      # ✅ Codex 실행 (PR이면 GitHub 코멘트, Push면 콘솔 출력)
-      - name: Run Codex review
+      # 🔹 Codex 실행 결과를 파일로 저장
+      - name: Run Codex Review
+        env:
+          TERM: dumb
+          NO_COLOR: true
+          FORCE_COLOR: 0
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 🔹 PR 코멘트 등록용 토큰
         run: |
           echo "🔍 Running Codex review..."
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            codex review --github --ask-for-approval never --debug
-          else
-            codex review --ask-for-approval never --debug | tee codex_review.txt
-          fi
+          npx @openai/codex review --ask-for-approval never > codex_review.txt 2>&1 || true
+
+      # 🔹 Codex 출력 내용을 PR 코멘트로 등록
+      - name: Post Codex Review as PR comment
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          echo "💬 Posting Codex review result to PR..."
+          gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
+            -f body="$(cat codex_review.txt)"

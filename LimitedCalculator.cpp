@@ -4,13 +4,27 @@
 
 LimitedCalculator::LimitedCalculator(double min_value, double max_value) noexcept
     : min_{min_value}, max_{max_value} {
-    if (min_ > max_) {
-        const double temp = min_;
-        min_ = max_;
-        max_ = temp;
-    }
-
+    normalize_limits();
     value_ = clamp(0.0);
+}
+
+void LimitedCalculator::set_limits(double min_value, double max_value) noexcept {
+    min_ = min_value;
+    max_ = max_value;
+    normalize_limits();
+    value_ = clamp(value_);
+}
+
+double LimitedCalculator::min_limit() const noexcept {
+    return min_;
+}
+
+double LimitedCalculator::max_limit() const noexcept {
+    return max_;
+}
+
+bool LimitedCalculator::within_limits(double candidate) const noexcept {
+    return candidate >= min_ && candidate <= max_;
 }
 
 double LimitedCalculator::value() const noexcept {
@@ -47,6 +61,14 @@ double LimitedCalculator::divide(double operand) {
 
     value_ = clamp(value_ / operand);
     return value_;
+}
+
+void LimitedCalculator::normalize_limits() noexcept {
+    if (min_ > max_) {
+        const double temp = min_;
+        min_ = max_;
+        max_ = temp;
+    }
 }
 
 double LimitedCalculator::clamp(double candidate) const noexcept {

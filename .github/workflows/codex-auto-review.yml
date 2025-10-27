@@ -12,6 +12,7 @@ jobs:
 
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 🔹 PR 코멘트 등록용 토큰
 
     steps:
       - name: Checkout code
@@ -27,11 +28,20 @@ jobs:
       - name: Install Codex CLI
         run: npm install -g @openai/codex
 
+      # 🔹 Codex 실행 결과를 파일로 저장
       - name: Run Codex Review
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          TERM: dumb              # 터미널 기능 최소화
-          NO_COLOR: true          # 컬러 출력 비활성화
+          TERM: dumb
+          NO_COLOR: true
           FORCE_COLOR: 0
         run: |
-          npx @openai/codex review --ask-for-approval never || true
+          echo "🔍 Running Codex review..."
+          npx @openai/codex review --ask-for-approval never > codex_review.txt 2>&1 || true
+
+      # 🔹 Codex 출력 내용을 PR 코멘트로 등록
+      - name: Post Codex Review as PR comment
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          echo "💬 Posting Codex review result to PR..."
+          gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
+            -f body="$(cat codex_review.txt)"

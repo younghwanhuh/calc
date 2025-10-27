@@ -17,6 +17,7 @@ jobs:
      TERM: dumb
      FORCE_COLOR: 0
      CODEx_TTY: "0"  
+     CODEX_NO_TTY: "1"   
 
     steps:
       - name: Checkout code
@@ -36,7 +37,7 @@ jobs:
         run: |
           echo "🔍 Running Codex review..."
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            codex review --github --ask-for-approval never --no-tty --debug
+            codex review --github --ask-for-approval never 
           else
-            codex review --ask-for-approval never --no-tty --debug | tee codex_review.txt
+            codex review --ask-for-approval never | tee codex_review.txt
           fi

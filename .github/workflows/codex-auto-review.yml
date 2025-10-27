@@ -32,7 +32,7 @@ jobs:
         run: |
           echo "🔍 Running Codex review..."
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            codex review --github --ask-for-approval never --debug
+            codex review --github --ask-for-approval never
           else
-            codex review --ask-for-approval never --debug | tee codex_review.txt
+            codex review --ask-for-approval never | tee codex_review.txt
           fi

@@ -27,6 +27,11 @@ jobs:
       - name: Install Codex CLI
         run: npm install -g @openai/codex
 
-      - name: Run Codex Review (with pseudo-TTY)
+      - name: Run Codex Review
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TERM: dumb              # 터미널 기능 최소화
+          NO_COLOR: true          # 컬러 출력 비활성화
+          FORCE_COLOR: 0
         run: |
-          script -q -e -c "codex review --ask-for-approval never" /dev/null
+          npx @openai/codex review --ask-for-approval never || true

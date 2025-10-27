@@ -34,6 +34,8 @@ jobs:
           TERM: dumb
           NO_COLOR: true
           FORCE_COLOR: 0
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 🔹 PR 코멘트 등록용 토큰
         run: |
           echo "🔍 Running Codex review..."
           npx @openai/codex review --ask-for-approval never > codex_review.txt 2>&1 || true

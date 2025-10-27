@@ -29,4 +29,4 @@ jobs:
 
       - name: Run Codex Review
         run: |
-          codex review --ask-for-approval never --quiet
+          codex review --ask-for-approval never

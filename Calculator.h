@@ -1,19 +1,21 @@
 #ifndef CALCULATOR_H
 #define CALCULATOR_H
 
-class Calculator {
+#include "AbstractCalculator.h"
+
+class Calculator : public AbstractCalculator {
 public:
     Calculator() noexcept = default;
     explicit Calculator(double initial_value) noexcept;
 
-    double value() const noexcept;
-    void set_value(double new_value) noexcept;
-    void clear() noexcept;
+    double value() const noexcept override;
+    void set_value(double new_value) noexcept override;
+    void clear() noexcept override;
 
-    double add(double operand) noexcept;
-    double subtract(double operand) noexcept;
-    double multiply(double operand) noexcept;
-    double divide(double operand);
+    double add(double operand) noexcept override;
+    double subtract(double operand) noexcept override;
+    double multiply(double operand) noexcept override;
+    double divide(double operand) override;
 
     static double add(double lhs, double rhs) noexcept;
     static double subtract(double lhs, double rhs) noexcept;

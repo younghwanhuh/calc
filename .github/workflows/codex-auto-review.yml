@@ -27,9 +27,6 @@ jobs:
       - name: Install Codex CLI
         run: npm install -g @openai/codex
 
-      - name: Run Codex Review
-        env:
-          FORCE_COLOR: 0
-          NO_TTY: true
+      - name: Run Codex Review (with pseudo-TTY)
         run: |
-          codex review --ask-for-approval never
+          script -q -e -c "codex review --ask-for-approval never" /dev/null

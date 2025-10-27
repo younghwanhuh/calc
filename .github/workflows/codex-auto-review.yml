@@ -30,7 +30,10 @@ jobs:
           node-version: 20
 
       - name: Install Codex CLI
-        run: npm install -g @openai/codex
+        run: |
+          npm uninstall -g @openai/codex || true
+          npm install -g @openai/codex@latest
+          codex --version
 
       - name: Run Codex review
         run: |

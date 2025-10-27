@@ -28,5 +28,8 @@ jobs:
         run: npm install -g @openai/codex
 
       - name: Run Codex Review
+        env:
+          FORCE_COLOR: 0
+          NO_TTY: true
         run: |
           codex review --ask-for-approval never

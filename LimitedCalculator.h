@@ -1,6 +1,9 @@
 #ifndef LIMITED_CALCULATOR_H
 #define LIMITED_CALCULATOR_H
 
+#include <string>
+#include <unordered_map>
+
 #include "AbstractCalculator.h"
 
 class LimitedCalculator : public AbstractCalculator {
@@ -28,6 +31,9 @@ private:
     double value_{0.0};
     double min_;
     double max_;
+
+protected:
+    std::unordered_map<std::string, double> extension_slots_;
 };
 
 #endif  // LIMITED_CALCULATOR_H

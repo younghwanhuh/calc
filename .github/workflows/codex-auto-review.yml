@@ -1,4 +1,4 @@
-name: Codex Auto Review
+name: GPT Auto Code Review
 
 on:
   pull_request:
@@ -9,20 +9,46 @@ on:
 permissions:
   contents: read
   pull-requests: write
-  issues: write   # 👈 추가 — Issue 생성 권한 부여
+  issues: write
 
 jobs:
-  codex-review:
+  gpt-review:
     runs-on: ubuntu-latest
 
     env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Post Codex Review Result (for PR or main push)
+      - name: Generate diff
+        run: |
+          echo "🔍 Generating code diff..."
+          git fetch origin main || true
+          git diff origin/main...HEAD > diff.txt
+          head -n 20 diff.txt || true
+
+      - name: Run GPT Code Review
+        run: |
+          echo "🤖 Running GPT-based code review..."
+          REVIEW=$(curl -s https://api.openai.com/v1/chat/completions \
+            -H "Authorization: Bearer $OPENAI_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"model\": \"gpt-4o-mini\",
+              \"messages\": [
+                {\"role\": \"system\", \"content\": \"You are an experienced software engineer performing a detailed code review.\"},
+                {\"role\": \"user\", \"content\": \"Review the following diff and provide constructive feedback with code suggestions:\\n$(head -c 10000 diff.txt)\"}
+              ],
+              \"max_tokens\": 800
+            }" | jq -r '.choices[0].message.content')
+          
+          echo "$REVIEW" > codex_review.txt
+          echo "✅ Review generated and saved to codex_review.txt"
+
+      - name: Post GPT Review Result
         if: ${{ hashFiles('codex_review.txt') != '' }}
         run: |
           echo "💬 Posting codex_review.txt..."
@@ -36,8 +62,6 @@ jobs:
             echo "Push detected → creating issue for review result"
             COMMIT_SHA=$(git rev-parse --short HEAD)
             gh api repos/${{ github.repository }}/issues \
-              -f title="🧠 Codex Review Result for commit ${COMMIT_SHA}" \
+              -f title="🧠 GPT Review Result for commit ${COMMIT_SHA}" \
               -f body="$(cat codex_review.txt)"
-          else
-            echo "Not a pull_request or push event — skipping"
           fi

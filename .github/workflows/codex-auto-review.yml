@@ -11,38 +11,16 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-     NO_COLOR: true
-     TERM: dumb
-     FORCE_COLOR: 0
-     CI: true                      # ✅ GitHub Actions 환경 감지용
-     NO_TTY: "1"                   # ✅ Codex 내부 stdout 감지 우회
-     NONINTERACTIVE: "1"           # ✅ CLI의 입력 모드 완전 비활성화
-     CODEX_NO_TTY: "1"             # ✅ Codex 자체 환경 변수 (추가로 안전망
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install Codex CLI
+      # codex_review.txt가 커밋되어 있을 때만 PR에 코멘트 남김
+      - name: Post Codex Review Result
+        if: ${{ github.event_name == 'pull_request' && hashFiles('codex_review.txt') != '' }}
         run: |
-          npm uninstall -g @openai/codex || true
-          npm install -g @openai/codex@latest
-          codex --version
-
-      - name: Run Codex review
-        run: |
-          echo "🔍 Running Codex review..."
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            codex review --github --ask-for-approval never 
-          else
-            codex review --ask-for-approval never | tee codex_review.txt
-          fi
+          echo "💬 Posting codex_review.txt to PR..."
+          gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
+            -f body="$(cat codex_review.txt)"

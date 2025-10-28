@@ -70,18 +70,28 @@ jobs:
           # diff 내용을 안전하게 JSON 문자열로 변환 (escape)
           DIFF_CONTENT=$(head -c 10000 diff.txt | jq -Rs .)
       
+          # JSON payload 안전하게 구성
+          REQUEST_BODY=$(jq -n \
+            --arg model "gpt-4o-mini" \
+            --arg system "너는 숙련된 시니어 개발자로서 코드 리뷰를 담당한다. 항상 한국어로, 깔끔한 Markdown 형식으로 리뷰를 작성한다. 항목별로 문제점을 짧고 명확하게 정리하고, 개선 방향을 제안한다." \
+            --arg user "다음 Git diff를 코드 리뷰해줘. 주요 개선점, 버그 가능성, 스타일 개선 제안을 Markdown 리스트 형식으로 작성해줘.\n" \
+            --argjson diff "$DIFF_CONTENT" \
+            '{
+              model: $model,
+              messages: [
+                {role: "system", content: $system},
+                {role: "user", content: ($user + $diff)}
+              ],
+              max_tokens: 1000,
+              temperature: 0.2
+            }'
+          )
+      
           RESPONSE=$(curl -s -w "\n%{http_code}" https://api.openai.com/v1/chat/completions \
             -H "Authorization: Bearer $OPENAI_API_KEY" \
             -H "Content-Type: application/json" \
-            -d "{
-              \"model\": \"gpt-4o-mini\",
-              \"messages\": [
-                {\"role\": \"system\", \"content\": \"너는 숙련된 시니어 개발자로서 코드 리뷰를 담당한다. 항상 한국어로, 깔끔한 Markdown 형식으로 리뷰를 작성한다. 항목별로 문제점을 짧고 명확하게 정리하고, 개선 방향을 제안한다.\"},
-                {\"role\": \"user\", \"content\": \"다음 Git diff를 코드 리뷰해줘. 주요 개선점, 버그 가능성, 스타일 개선 제안을 Markdown 리스트 형식으로 작성해줘.\n\"${DIFF_CONTENT}"}
-              ],
-              \"max_tokens\": 1000,
-              \"temperature\": 0.2
-            }")
+            -d "$REQUEST_BODY"
+          )
       
           HTTP_CODE=$(echo "$RESPONSE" | tail -n 1)
           BODY=$(echo "$RESPONSE" | sed '$d')
@@ -100,6 +110,7 @@ jobs:
       
           REVIEW_ESCAPED=$(echo "$REVIEW" | jq -Rs .)
           echo "review_content=$REVIEW_ESCAPED" >> $GITHUB_OUTPUT
+
 
 
       - name: Post GPT Review Result

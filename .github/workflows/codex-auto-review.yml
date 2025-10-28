@@ -18,9 +18,15 @@ jobs:
         uses: actions/checkout@v4
 
       # codex_review.txt가 커밋되어 있을 때만 PR에 코멘트 남김
-      - name: Post Codex Review Result
-        if: ${{ github.event_name == 'pull_request' && hashFiles('codex_review.txt') != '' }}
+      - name: Post Codex Review Result (for PR or main push)
+        if: ${{ hashFiles('codex_review.txt') != '' }}
         run: |
-          echo "💬 Posting codex_review.txt to PR..."
-          gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
-            -f body="$(cat codex_review.txt)"
+          echo "💬 Posting codex_review.txt..."
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
+              -f body="$(cat codex_review.txt)"
+          else
+            gh api repos/${{ github.repository }}/issues \
+              -f title="Codex review result for push to main" \
+              -f body="$(cat codex_review.txt)"
+          fi

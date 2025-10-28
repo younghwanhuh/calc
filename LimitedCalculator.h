@@ -23,6 +23,7 @@ public:
     double subtract(double operand) noexcept override;
     double multiply(double operand) noexcept override;
     double divide(double operand) override;
+    double mod(double operand) override;
     double sqrt() override;
 
 private:

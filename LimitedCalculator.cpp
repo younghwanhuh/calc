@@ -64,6 +64,15 @@ double LimitedCalculator::divide(double operand) {
     return value_;
 }
 
+double LimitedCalculator::mod(double operand) {
+    if (operand == 0.0) {
+        throw std::invalid_argument("Modulo by zero is undefined.");
+    }
+
+    value_ = clamp(std::fmod(value_, operand));
+    return value_;
+}
+
 double LimitedCalculator::sqrt() {
     if (value_ < 0.0) {
         throw std::domain_error("Square root of a negative value is undefined.");

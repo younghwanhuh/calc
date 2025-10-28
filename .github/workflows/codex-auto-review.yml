@@ -16,9 +16,10 @@ jobs:
      NO_COLOR: true
      TERM: dumb
      FORCE_COLOR: 0
-     CODEX_TTY: "0"       
-     CODEX_NO_TTY: "1"    
-     CODEX_NONINTERACTIVE: "1"
+     CI: true                      # ✅ GitHub Actions 환경 감지용
+     NO_TTY: "1"                   # ✅ Codex 내부 stdout 감지 우회
+     NONINTERACTIVE: "1"           # ✅ CLI의 입력 모드 완전 비활성화
+     CODEX_NO_TTY: "1"             # ✅ Codex 자체 환경 변수 (추가로 안전망
 
     steps:
       - name: Checkout code

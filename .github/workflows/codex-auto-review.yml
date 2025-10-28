@@ -139,6 +139,6 @@ jobs:
           elif [ "${{ github.event_name }}" = "push" ]; then
             echo "🧠 Push 이벤트 감지됨 → 새 이슈로 게시"
             gh api repos/${{ github.repository }}/issues \
-              -f title="🧠 GPT 코드 리뷰 결과 ($COMMIT_SHA)" \
+              -f title="🧠 GPT 코드 리뷰 결과 ($COMMIT_SHA, $COMMIT_MSG)" \
               -f body="$HEADER"
           fi

@@ -116,21 +116,29 @@ jobs:
       - name: Post GPT Review Result
         run: |
           echo "💬 리뷰 결과 게시 중..."
+          
           REVIEW=$(echo '${{ steps.review.outputs.review_content }}' | jq -r .)
+          COMMIT_SHA=$(git rev-parse --short HEAD)
+          COMMIT_MSG=$(git log -1 --pretty=%s)
 
           if [ -z "$REVIEW" ]; then
             echo "⚠️ 리뷰 내용이 없습니다. 종료합니다."
             exit 0
           fi
           
+          HEADER="🧠 **GPT 코드 리뷰 결과**  
+          📘 Commit: \`$COMMIT_SHA\`  
+          💬 Message: $COMMIT_MSG  
+          ---  
+          $REVIEW"
+
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "📬 PR 이벤트 감지됨 → PR 코멘트로 게시"
             gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
-              -f body="$REVIEW"
+              -f body="$HEADER"
           elif [ "${{ github.event_name }}" = "push" ]; then
             echo "🧠 Push 이벤트 감지됨 → 새 이슈로 게시"
-            COMMIT_SHA=$(git rev-parse --short HEAD)
             gh api repos/${{ github.repository }}/issues \
-              -f title="🧠 GPT 코드 리뷰 결과 (${COMMIT_SHA})" \
-              -f body="$REVIEW"
+              -f title="🧠 GPT 코드 리뷰 결과 ($COMMIT_SHA)" \
+              -f body="$HEADER"
           fi

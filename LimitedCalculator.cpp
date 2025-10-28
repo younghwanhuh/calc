@@ -45,6 +45,11 @@ double LimitedCalculator::add(double operand) noexcept {
     return value_;
 }
 
+double LimitedCalculator::add(double first, double second, double third) noexcept {
+    value_ = clamp(value_ + first + second + third);
+    return value_;
+}
+
 double LimitedCalculator::subtract(double operand) noexcept {
     value_ = clamp(value_ - operand);
     return value_;
@@ -97,3 +102,4 @@ double LimitedCalculator::clamp(double candidate) const noexcept {
 
     return candidate;
 }
+

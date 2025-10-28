@@ -17,8 +17,10 @@ public:
     double multiply(double operand) noexcept override;
     double divide(double operand) override;
     double sqrt() override;
+    double add(double first, double second, double third) noexcept override;
 
     static double add(double lhs, double rhs) noexcept;
+    static double add(double first, double second, double third) noexcept;
     static double subtract(double lhs, double rhs) noexcept;
     static double multiply(double lhs, double rhs) noexcept;
     static double divide(double lhs, double rhs);

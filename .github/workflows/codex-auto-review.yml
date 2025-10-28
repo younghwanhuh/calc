@@ -25,21 +25,31 @@ jobs:
 
       - name: Ensure jq installed
         run: |
-          sudo apt-get update
+          sudo apt-get update -y
           sudo apt-get install -y jq
 
+      # 👇 PR이면 main 기준, push면 이전 커밋 기준으로 diff 생성
       - name: Generate diff
         run: |
           echo "🔍 변경된 코드 비교 중..."
-          git fetch origin main || true
-          git diff origin/main...HEAD > diff.txt
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "📦 PR 감지됨 → origin/main과 비교"
+            git fetch origin main || true
+            git diff origin/main...HEAD > diff.txt
+          else
+            echo "🚀 Push 감지됨 → 바로 이전 커밋과 비교"
+            git diff HEAD^ HEAD > diff.txt
+          fi
+
           if [ ! -s diff.txt ]; then
             echo "⚠️ 변경된 코드가 없습니다. 리뷰를 건너뜁니다."
             exit 0
           fi
+
+          echo "✅ diff.txt 생성 완료 (상위 20줄 미리보기)"
           head -n 20 diff.txt || true
 
-      - name: Run GPT Code Review (Korean output, no file)
+      - name: Run GPT Code Review (Korean output)
         id: review
         run: |
           echo "🤖 OpenAI GPT를 이용해 코드 리뷰 생성 중..."
@@ -57,7 +67,6 @@ jobs:
               \"temperature\": 0.2
             }")
 
-          # 응답 분리
           HTTP_CODE=$(echo "$RESPONSE" | tail -n 1)
           BODY=$(echo "$RESPONSE" | sed '$d')
 
@@ -73,15 +82,12 @@ jobs:
             REVIEW="⚠️ GPT가 리뷰 내용을 반환하지 않았습니다. diff가 너무 크거나 API 제한일 수 있습니다."
           fi
 
-          # GitHub Actions 출력으로 전달
           REVIEW_ESCAPED=$(echo "$REVIEW" | jq -Rs .)
           echo "review_content=$REVIEW_ESCAPED" >> $GITHUB_OUTPUT
 
       - name: Post GPT Review Result
         run: |
           echo "💬 리뷰 결과 게시 중..."
-
-          # Actions 출력 변수에서 리뷰 내용 읽기
           REVIEW=$(echo '${{ steps.review.outputs.review_content }}' | jq -r .)
 
           if [ -z "$REVIEW" ]; then
@@ -90,12 +96,11 @@ jobs:
           fi
           
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "PR 이벤트 감지됨 → PR 코멘트로 게시"
+            echo "📬 PR 이벤트 감지됨 → PR 코멘트로 게시"
             gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
               -f body="$REVIEW"
-
           elif [ "${{ github.event_name }}" = "push" ]; then
-            echo "Push 이벤트 감지됨 → 새 이슈로 게시"
+            echo "🧠 Push 이벤트 감지됨 → 새 이슈로 게시"
             COMMIT_SHA=$(git rev-parse --short HEAD)
             gh api repos/${{ github.repository }}/issues \
               -f title="🧠 GPT 코드 리뷰 결과 (${COMMIT_SHA})" \

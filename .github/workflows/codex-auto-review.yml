@@ -23,45 +23,81 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Ensure jq installed
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
       - name: Generate diff
         run: |
-          echo "🔍 Generating code diff..."
+          echo "🔍 변경된 코드 비교 중..."
           git fetch origin main || true
           git diff origin/main...HEAD > diff.txt
+          if [ ! -s diff.txt ]; then
+            echo "⚠️ 변경된 코드가 없습니다. 리뷰를 건너뜁니다."
+            exit 0
+          fi
           head -n 20 diff.txt || true
 
-      - name: Run GPT Code Review
+      - name: Run GPT Code Review (Korean output, no file)
+        id: review
         run: |
-          echo "🤖 Running GPT-based code review..."
-          REVIEW=$(curl -s https://api.openai.com/v1/chat/completions \
+          echo "🤖 OpenAI GPT를 이용해 코드 리뷰 생성 중..."
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" https://api.openai.com/v1/chat/completions \
             -H "Authorization: Bearer $OPENAI_API_KEY" \
             -H "Content-Type: application/json" \
             -d "{
               \"model\": \"gpt-4o-mini\",
               \"messages\": [
-                {\"role\": \"system\", \"content\": \"You are an experienced software engineer performing a detailed code review.\"},
-                {\"role\": \"user\", \"content\": \"Review the following diff and provide constructive feedback with code suggestions:\\n$(head -c 10000 diff.txt)\"}
+                {\"role\": \"system\", \"content\": \"너는 숙련된 시니어 개발자로서 코드 리뷰를 담당한다. 항상 한국어로, 깔끔한 Markdown 형식으로 리뷰를 작성한다. 항목별로 문제점을 짧고 명확하게 정리하고, 개선 방향을 제안한다.\"},
+                {\"role\": \"user\", \"content\": \"다음 Git diff를 코드 리뷰해줘. 주요 개선점, 버그 가능성, 스타일 개선 제안을 Markdown 리스트 형식으로 작성해줘.\\n$(head -c 10000 diff.txt)\"}
               ],
-              \"max_tokens\": 800
-            }" | jq -r '.choices[0].message.content')
-          
-          echo "$REVIEW" > codex_review.txt
-          echo "✅ Review generated and saved to codex_review.txt"
+              \"max_tokens\": 1000,
+              \"temperature\": 0.2
+            }")
+
+          # 응답 분리
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n 1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          echo "🔎 HTTP Status: $HTTP_CODE"
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ OpenAI API 요청 실패:"
+            echo "$BODY"
+            exit 1
+          fi
+
+          REVIEW=$(echo "$BODY" | jq -r '.choices[0].message.content' || true)
+          if [ -z "$REVIEW" ] || [ "$REVIEW" = "null" ]; then
+            REVIEW="⚠️ GPT가 리뷰 내용을 반환하지 않았습니다. diff가 너무 크거나 API 제한일 수 있습니다."
+          fi
+
+          # GitHub Actions 출력으로 전달
+          REVIEW_ESCAPED=$(echo "$REVIEW" | jq -Rs .)
+          echo "review_content=$REVIEW_ESCAPED" >> $GITHUB_OUTPUT
 
       - name: Post GPT Review Result
-        if: ${{ hashFiles('codex_review.txt') != '' }}
         run: |
-          echo "💬 Posting codex_review.txt..."
+          echo "💬 리뷰 결과 게시 중..."
+
+          # Actions 출력 변수에서 리뷰 내용 읽기
+          REVIEW=$(echo '${{ steps.review.outputs.review_content }}' | jq -r .)
+
+          if [ -z "$REVIEW" ]; then
+            echo "⚠️ 리뷰 내용이 없습니다. 종료합니다."
+            exit 0
+          fi
           
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "PR detected → posting as PR comment"
+            echo "PR 이벤트 감지됨 → PR 코멘트로 게시"
             gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
-              -f body="$(cat codex_review.txt)"
+              -f body="$REVIEW"
 
           elif [ "${{ github.event_name }}" = "push" ]; then
-            echo "Push detected → creating issue for review result"
+            echo "Push 이벤트 감지됨 → 새 이슈로 게시"
             COMMIT_SHA=$(git rev-parse --short HEAD)
             gh api repos/${{ github.repository }}/issues \
-              -f title="🧠 GPT Review Result for commit ${COMMIT_SHA}" \
-              -f body="$(cat codex_review.txt)"
+              -f title="🧠 GPT 코드 리뷰 결과 (${COMMIT_SHA})" \
+              -f body="$REVIEW"
           fi

@@ -1,5 +1,6 @@
 #include "Calculator.h"
 
+#include <cmath>
 #include <stdexcept>
 
 Calculator::Calculator(double initial_value) noexcept : value_{initial_value} {}
@@ -37,6 +38,15 @@ double Calculator::divide(double operand) {
     }
 
     value_ /= operand;
+    return value_;
+}
+
+double Calculator::sqrt() {
+    if (value_ < 0.0) {
+        throw std::domain_error("Square root of a negative value is undefined.");
+    }
+
+    value_ = std::sqrt(value_);
     return value_;
 }
 

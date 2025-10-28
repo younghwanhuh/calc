@@ -1,5 +1,6 @@
 #include "LimitedCalculator.h"
 
+#include <cmath>
 #include <stdexcept>
 
 LimitedCalculator::LimitedCalculator(double min_value, double max_value) noexcept
@@ -60,6 +61,20 @@ double LimitedCalculator::divide(double operand) {
     }
 
     value_ = clamp(value_ / operand);
+    return value_;
+}
+
+double LimitedCalculator::sqrt() {
+    if (value_ < 0.0) {
+        throw std::domain_error("Square root of a negative value is undefined.");
+    }
+
+    const double result = std::sqrt(value_);
+    if (!within_limits(result)) {
+        throw std::out_of_range("Square root result falls outside configured limits.");
+    }
+
+    value_ = result;
     return value_;
 }
 

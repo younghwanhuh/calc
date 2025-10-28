@@ -22,23 +22,36 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 👈 전체 git 이력 가져오기 (HEAD^ 인식 가능)
 
       - name: Ensure jq installed
         run: |
           sudo apt-get update -y
           sudo apt-get install -y jq
 
-      # 👇 PR이면 main 기준, push면 이전 커밋 기준으로 diff 생성
+      # 👇 PR이면 main 기준, push면 HEAD^ 기준으로 diff 생성
       - name: Generate diff
         run: |
           echo "🔍 변경된 코드 비교 중..."
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
+          EVENT="${{ github.event_name }}"
+
+          if [ "$EVENT" = "pull_request" ]; then
             echo "📦 PR 감지됨 → origin/main과 비교"
             git fetch origin main || true
             git diff origin/main...HEAD > diff.txt
           else
             echo "🚀 Push 감지됨 → 바로 이전 커밋과 비교"
-            git diff HEAD^ HEAD > diff.txt
+
+            # 👇 HEAD^ 존재 여부 확인 (첫 커밋 예외 처리)
+            if git rev-parse HEAD^ >/dev/null 2>&1; then
+              echo "✅ 이전 커밋 존재 → HEAD^와 diff 생성"
+              git diff HEAD^ HEAD > diff.txt
+            else
+              echo "⚠️ 이전 커밋이 없습니다 (첫 커밋 또는 shallow clone)"
+              echo "🧠 첫 커밋의 전체 코드를 리뷰 대상으로 지정합니다"
+              git show HEAD --pretty=format: --no-prefix > diff.txt
+            fi
           fi
 
           if [ ! -s diff.txt ]; then

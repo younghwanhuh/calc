@@ -16,6 +16,7 @@ public:
     virtual double divide(double operand) = 0;
     virtual double sqrt() = 0;
     virtual double add(double first, double second, double third) noexcept = 0;
+    virtual double add(double first, double second, double third, double fourth, double fifth) noexcept = 0;
 };
 
 #endif  // ABSTRACT_CALCULATOR_H

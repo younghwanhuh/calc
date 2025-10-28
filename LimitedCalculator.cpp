@@ -50,6 +50,11 @@ double LimitedCalculator::add(double first, double second, double third) noexcep
     return value_;
 }
 
+double LimitedCalculator::add(double first, double second, double third, double fourth, double fifth) noexcept {
+    value_ = clamp(value_ + first + second + third + fourth + fifth);
+    return value_;
+}
+
 double LimitedCalculator::subtract(double operand) noexcept {
     value_ = clamp(value_ - operand);
     return value_;

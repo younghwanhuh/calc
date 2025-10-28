@@ -26,6 +26,7 @@ public:
     double divide(double operand) override;
     double sqrt() override;
     double add(double first, double second, double third) noexcept override;
+    double add(double first, double second, double third, double fourth, double fifth) noexcept override;
 
 private:
     void normalize_limits() noexcept;

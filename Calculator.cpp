@@ -27,6 +27,11 @@ double Calculator::add(double first, double second, double third) noexcept {
     return value_;
 }
 
+double Calculator::add(double first, double second, double third, double fourth, double fifth) noexcept {
+    value_ += first + second + third + fourth + fifth;
+    return value_;
+}
+
 double Calculator::subtract(double operand) noexcept {
     value_ -= operand;
     return value_;
@@ -59,8 +64,12 @@ double Calculator::add(double lhs, double rhs) noexcept {
     return lhs + rhs;
 }
 
-double Calculator::add(double first, double second, double third) noexcept {
+double Calculator::add_three(double first, double second, double third) noexcept {
     return first + second + third;
+}
+
+double Calculator::add_five(double first, double second, double third, double fourth, double fifth) noexcept {
+    return first + second + third + fourth + fifth;
 }
 
 double Calculator::subtract(double lhs, double rhs) noexcept {
@@ -71,7 +80,7 @@ double Calculator::multiply(double lhs, double rhs) noexcept {
     return lhs * rhs;
 }
 
-double Calculator::multiply(double first, double second, double third, double fourth) noexcept {
+double Calculator::multiply_four(double first, double second, double third, double fourth) noexcept {
     return first * second * third * fourth;
 }
 

@@ -19,10 +19,12 @@ public:
     double divide(double operand) override;
     double sqrt() override;
     double add(double first, double second, double third) noexcept override;
+    double add(double first, double second, double third, double fourth, double fifth) noexcept override;
 
     static double add(double lhs, double rhs) noexcept;
-    static double add(double first, double second, double third) noexcept;
-    static double multiply(double first, double second, double third, double fourth) noexcept;
+    static double add_three(double first, double second, double third) noexcept;
+    static double add_five(double first, double second, double third, double fourth, double fifth) noexcept;
+    static double multiply_four(double first, double second, double third, double fourth) noexcept;
     static double subtract(double lhs, double rhs) noexcept;
     static double multiply(double lhs, double rhs) noexcept;
     static double divide(double lhs, double rhs);

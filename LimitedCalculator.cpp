@@ -60,6 +60,11 @@ double LimitedCalculator::multiply(double operand) noexcept {
     return value_;
 }
 
+double LimitedCalculator::multiply(double first, double second, double third, double fourth) noexcept {
+    value_ = clamp(value_ * first * second * third * fourth);
+    return value_;
+}
+
 double LimitedCalculator::divide(double operand) {
     if (operand == 0.0) {
         throw std::invalid_argument("Division by zero is undefined.");

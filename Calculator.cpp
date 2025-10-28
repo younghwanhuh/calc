@@ -71,6 +71,10 @@ double Calculator::multiply(double lhs, double rhs) noexcept {
     return lhs * rhs;
 }
 
+double Calculator::multiply(double first, double second, double third, double fourth) noexcept {
+    return first * second * third * fourth;
+}
+
 double Calculator::divide(double lhs, double rhs) {
     if (rhs == 0.0) {
         throw std::invalid_argument("Division by zero is undefined.");

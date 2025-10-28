@@ -12,6 +12,7 @@ public:
     virtual double add(double operand) noexcept = 0;
     virtual double subtract(double operand) noexcept = 0;
     virtual double multiply(double operand) noexcept = 0;
+    virtual double multiply(double first, double second, double third, double fourth) noexcept = 0;
     virtual double divide(double operand) = 0;
     virtual double sqrt() = 0;
     virtual double add(double first, double second, double third) noexcept = 0;

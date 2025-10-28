@@ -66,7 +66,10 @@ jobs:
         id: review
         run: |
           echo "🤖 OpenAI GPT를 이용해 코드 리뷰 생성 중..."
-
+      
+          # diff 내용을 안전하게 JSON 문자열로 변환 (escape)
+          DIFF_CONTENT=$(head -c 10000 diff.txt | jq -Rs .)
+      
           RESPONSE=$(curl -s -w "\n%{http_code}" https://api.openai.com/v1/chat/completions \
             -H "Authorization: Bearer $OPENAI_API_KEY" \
             -H "Content-Type: application/json" \
@@ -74,29 +77,30 @@ jobs:
               \"model\": \"gpt-4o-mini\",
               \"messages\": [
                 {\"role\": \"system\", \"content\": \"너는 숙련된 시니어 개발자로서 코드 리뷰를 담당한다. 항상 한국어로, 깔끔한 Markdown 형식으로 리뷰를 작성한다. 항목별로 문제점을 짧고 명확하게 정리하고, 개선 방향을 제안한다.\"},
-                {\"role\": \"user\", \"content\": \"다음 Git diff를 코드 리뷰해줘. 주요 개선점, 버그 가능성, 스타일 개선 제안을 Markdown 리스트 형식으로 작성해줘.\\n$(head -c 10000 diff.txt)\"}
+                {\"role\": \"user\", \"content\": \"다음 Git diff를 코드 리뷰해줘. 주요 개선점, 버그 가능성, 스타일 개선 제안을 Markdown 리스트 형식으로 작성해줘.\n\"${DIFF_CONTENT}"}
               ],
               \"max_tokens\": 1000,
               \"temperature\": 0.2
             }")
-
+      
           HTTP_CODE=$(echo "$RESPONSE" | tail -n 1)
           BODY=$(echo "$RESPONSE" | sed '$d')
-
+      
           echo "🔎 HTTP Status: $HTTP_CODE"
           if [ "$HTTP_CODE" != "200" ]; then
             echo "❌ OpenAI API 요청 실패:"
             echo "$BODY"
             exit 1
           fi
-
+      
           REVIEW=$(echo "$BODY" | jq -r '.choices[0].message.content' || true)
           if [ -z "$REVIEW" ] || [ "$REVIEW" = "null" ]; then
             REVIEW="⚠️ GPT가 리뷰 내용을 반환하지 않았습니다. diff가 너무 크거나 API 제한일 수 있습니다."
           fi
-
+      
           REVIEW_ESCAPED=$(echo "$REVIEW" | jq -Rs .)
           echo "review_content=$REVIEW_ESCAPED" >> $GITHUB_OUTPUT
+
 
       - name: Post GPT Review Result
         run: |

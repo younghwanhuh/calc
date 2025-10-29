@@ -25,3 +25,5 @@ calc.multiply(2); // 30
 ```
 
 Use `LimitedCalculator` when you need to enforce numeric bounds and avoid overflow-like behavior.
+
+## 테스트

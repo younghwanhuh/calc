@@ -3,6 +3,7 @@
 
 #include "AbstractCalculator.h"
 
+// Stateful calculator that performs basic arithmetic without enforcing limits.
 class Calculator : public AbstractCalculator {
 public:
     Calculator() noexcept = default;

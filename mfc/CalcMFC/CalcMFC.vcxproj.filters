@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="소스 파일">
+      <UniqueIdentifier>{9E22118E-4718-4E44-9F74-0EF749398972}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일">
+      <UniqueIdentifier>{672C9BDD-482A-4674-B59A-CEE7CFA455AD}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="계산기 라이브러리">
+      <UniqueIdentifier>{5A38BB97-D5EE-427C-9F7E-7B1A99A9C22E}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="App.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="MainFrame.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Calculator.cpp">
+      <Filter>계산기 라이브러리</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\LimitedCalculator.cpp">
+      <Filter>계산기 라이브러리</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="App.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="MainFrame.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\AbstractCalculator.h">
+      <Filter>계산기 라이브러리</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Calculator.h">
+      <Filter>계산기 라이브러리</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\LimitedCalculator.h">
+      <Filter>계산기 라이브러리</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

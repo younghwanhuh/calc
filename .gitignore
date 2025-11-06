@@ -1,0 +1,9 @@
+# Build artifacts
+/build/
+mfc/build/
+mfc/CalcMFC/Debug/
+mfc/CalcMFC/Release/
+
+# Visual Studio generated data
+mfc/.vs/
+mfc/CalcMFC/*.vcxproj.user

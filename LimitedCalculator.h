@@ -6,6 +6,7 @@
 
 #include "AbstractCalculator.h"
 
+// Calculator that clamps results within configurable numeric bounds.
 class LimitedCalculator : public AbstractCalculator {
 public:
     explicit LimitedCalculator(double min_value = -1000.0, double max_value = 1000.0) noexcept;

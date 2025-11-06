@@ -1,6 +1,7 @@
 #ifndef ABSTRACT_CALCULATOR_H
 #define ABSTRACT_CALCULATOR_H
 
+// Defines the common interface shared by all calculator implementations.
 class AbstractCalculator {
 public:
     virtual ~AbstractCalculator() = default;
